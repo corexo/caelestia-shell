@@ -95,7 +95,7 @@ StyledRect {
             }
 
             StyledText {
-                text: Units.formatSensorTemp(root.temperature)
+                text: isFinite(root.temperature) ? Units.formatSensorTemp(root.temperature) : "N/A"
                 font: Tokens.font.body.builders.medium.build()
             }
         }

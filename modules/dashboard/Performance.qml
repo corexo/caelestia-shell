@@ -105,6 +105,10 @@ Item {
                 }
             }
 
+            FanCard {
+                Layout.fillWidth: true
+            }
+
             RowLayout {
                 spacing: Tokens.spacing.medium
                 visible: storageCard.active || networkCard.active || memoryCard.active
