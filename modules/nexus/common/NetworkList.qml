@@ -62,6 +62,11 @@ ItemList {
 
         onClicked: {
             if (!modelData.active) {
+                if (modelData.isSecure && !Nmcli.hasSavedProfile(modelData.ssid)) {
+                    root.nState.selectedNetworkSsid = modelData.ssid;
+                    root.nState.openSubPage(2);
+                    return;
+                }
                 NetworkConnection.handleConnect(modelData);
                 currentSelected = true;
                 root.networkSelected(modelData);

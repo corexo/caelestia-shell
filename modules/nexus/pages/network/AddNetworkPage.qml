@@ -51,6 +51,14 @@ PageBase {
         });
     }
 
+    Component.onCompleted: {
+        if (root.nState.selectedNetworkSsid) {
+            ssidField.text = root.nState.selectedNetworkSsid;
+            hiddenToggle.checked = false;
+            passwordField.forceActiveFocus();
+        }
+    }
+
     title: Tr.tr("Add network")
     isSubPage: true
 
