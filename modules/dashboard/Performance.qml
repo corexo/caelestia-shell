@@ -109,6 +109,10 @@ Item {
                 Layout.fillWidth: true
             }
 
+            DetailsCard {
+                Layout.fillWidth: true
+            }
+
             RowLayout {
                 spacing: Tokens.spacing.medium
                 visible: storageCard.active || networkCard.active || memoryCard.active
