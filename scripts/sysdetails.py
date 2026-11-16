@@ -98,8 +98,10 @@ def main() -> None:
     assert parse_cpus("0-3,8\n") == [0, 1, 2, 3, 8] and parse_cpus("5") == [5]
     cpu_groups = groups()
     before = cpu_times()
+    delay = 0.5  # first sample quickly so the card is not empty when it opens
     while True:
-        time.sleep(0.5 if "--once" in sys.argv else 2)
+        time.sleep(delay)
+        delay = 2
         after = cpu_times()
         print(json.dumps(snapshot(before, after, cpu_groups)), flush=True)
         if "--once" in sys.argv:

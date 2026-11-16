@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
+import Quickshell.Services.UPower
 import Caelestia.Config
 import qs.components
 import qs.services
@@ -68,9 +69,71 @@ StyledRect {
             wrapMode: Text.Wrap
         }
 
+        // No direct RPM control with the in-tree drivers: the firmware picks the fan curve from the power profile
+        RowLayout {
+            Layout.topMargin: Tokens.spacing.extraSmall
+            spacing: Tokens.spacing.small
+
+            Repeater {
+                model: [
+                    {
+                        profile: PowerProfile.PowerSaver,
+                        icon: "bedtime",
+                        text: "Leise"
+                    },
+                    {
+                        profile: PowerProfile.Balanced,
+                        icon: "balance",
+                        text: "Ausgewogen"
+                    },
+                    {
+                        profile: PowerProfile.Performance,
+                        icon: "rocket_launch",
+                        text: "Leistung"
+                    }
+                ]
+
+                StyledRect {
+                    id: chip
+
+                    required property var modelData
+                    readonly property bool current: PowerProfiles.profile === modelData.profile
+
+                    implicitWidth: chipRow.implicitWidth + Tokens.padding.large * 2
+                    implicitHeight: chipRow.implicitHeight + Tokens.padding.small * 2
+                    radius: Tokens.rounding.full
+                    color: current ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+
+                    StateLayer {
+                        radius: Tokens.rounding.full
+                        color: chip.current ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                        onClicked: PowerProfiles.profile = chip.modelData.profile
+                    }
+
+                    RowLayout {
+                        id: chipRow
+
+                        anchors.centerIn: parent
+                        spacing: Tokens.spacing.extraSmall
+
+                        MaterialIcon {
+                            text: chip.modelData.icon
+                            color: chip.current ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                        }
+
+                        StyledText {
+                            text: chip.modelData.text
+                            color: chip.current ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                            font: Tokens.font.body.medium
+                        }
+                    }
+                }
+            }
+        }
+
         StyledText {
             Layout.fillWidth: true
-            text: "Automatisch durch die Geräte-Firmware geregelt."
+            text: "Die Firmware regelt die Drehzahl nach dem gewählten Profil."
             font: Tokens.font.body.small
             color: Colours.palette.m3onSurfaceVariant
             wrapMode: Text.Wrap

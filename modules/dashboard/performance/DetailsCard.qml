@@ -155,7 +155,7 @@ StyledRect {
 
             Meter {
                 name: "VRAM"
-                value: root.gpu ? `${(root.gpu.vramUsed / 1024).toFixed(1)} / ${(root.gpu.vramTotal / 1024).toFixed(1)} GiB` : "Nicht verfügbar"
+                value: root.gpu ? `${(root.gpu.vramUsed / 1024).toFixed(1)} / ${(root.gpu.vramTotal / 1024).toFixed(1)} GiB` : root.stats ? "Nicht verfügbar" : "…"
                 fraction: root.gpu ? root.gpu.vramUsed / root.gpu.vramTotal : 0
                 accent: Colours.palette.m3secondary
             }
