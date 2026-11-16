@@ -105,6 +105,11 @@ Item {
                     {
                         isClose: true
                     },
+                    ...(Notifs.sourceToplevel(root.notif) ? [
+                            {
+                                isJump: true
+                            }
+                        ] : []),
                     ...(root.notif?.actions ?? []),
                     {
                         isCopy: true
@@ -138,6 +143,8 @@ Item {
                         onClicked: {
                             if (action.modelData.isClose) {
                                 root.notif.close();
+                            } else if (action.modelData.isJump) {
+                                Notifs.focusSource(root.notif);
                             } else if (action.modelData.isCopy) {
                                 Quickshell.clipboardText = root.notif.body;
                                 actionInner.item.text = "inventory";
@@ -154,7 +161,7 @@ Item {
                         id: actionInner
 
                         anchors.centerIn: parent
-                        sourceComponent: action.modelData.isClose || action.modelData.isCopy ? iconBtn : root.notif?.hasActionIcons ? iconComp : textComp
+                        sourceComponent: action.modelData.isClose || action.modelData.isCopy || action.modelData.isJump ? iconBtn : root.notif?.hasActionIcons ? iconComp : textComp
                     }
 
                     Component {
@@ -162,7 +169,7 @@ Item {
 
                         MaterialIcon {
                             animate: action.modelData.isCopy ?? false
-                            text: action.modelData.isCopy ? "content_copy" : "close"
+                            text: action.modelData.isCopy ? "content_copy" : action.modelData.isJump ? "open_in_new" : "close"
                             color: Colours.palette.m3onSurfaceVariant
                         }
                     }

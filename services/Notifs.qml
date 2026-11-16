@@ -38,6 +38,38 @@ Singleton {
         return true;
     }
 
+    // Window a notification came from: explicit hint (scripts/caelestia-ask) first, then app class
+    function sourceToplevel(notif: NotifData): var {
+        if (!notif)
+            return null;
+
+        const all = Hypr.toplevels.values;
+        const addr = String(notif.hints?.["x-caelestia-window"] ?? "").replace(/^0x/, "");
+        if (addr) {
+            const t = all.find(t => t.address === addr);
+            if (t)
+                return t;
+        }
+
+        const names = [notif.hints?.["desktop-entry"], notif.appName].filter(n => n).map(n => String(n).toLowerCase());
+        return all.find(t => names.includes(String(t.lastIpcObject?.class ?? t.wayland?.appId ?? "").toLowerCase())) ?? null;
+    }
+
+    function focusSource(notif: NotifData): bool {
+        const t = sourceToplevel(notif);
+        if (!t)
+            return false;
+
+        Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ window = "address:0x${t.address}" })` : `focuswindow address:0x${t.address}`);
+        notif.popup = false;
+        for (const screen of Quickshell.screens) {
+            const s = ShellState.forScreen(screen);
+            if (s)
+                s.sidebar = false;
+        }
+        return true;
+    }
+
     onDndChanged: {
         if (!GlobalConfig.utilities.toasts.dndChanged)
             return;
@@ -90,6 +122,7 @@ Singleton {
         bodyImagesSupported: true
         bodyMarkupSupported: true
         imageSupported: true
+        inlineReplySupported: true
         persistenceSupported: true
 
         onNotification: notif => {

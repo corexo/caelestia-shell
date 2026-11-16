@@ -52,6 +52,10 @@ QtObject {
     property bool resident
     property bool hasActionIcons
     property list<var> actions
+    property bool hasInlineReply
+    property string inlineReplyPlaceholder
+    // Questions from agents (scripts/caelestia-ask) stay on screen until answered
+    readonly property bool isAsk: hasInlineReply || !!hints?.["x-caelestia-ask"]
 
     readonly property bool hasFullscreen: {
         const monitor = Hypr.focusedMonitor;
@@ -67,6 +71,9 @@ QtObject {
         running: true
         interval: notif.expireTimeout > 0 ? notif.expireTimeout : notif.hasFullscreen ? GlobalConfig.notifs.fullscreenExpireTimeout : GlobalConfig.notifs.defaultExpireTimeout
         onTriggered: {
+            if (notif.isAsk)
+                return;
+
             // Always expire if the active workspace has a fullscreen window
             if (GlobalConfig.notifs.expire || notif.hasFullscreen)
                 notif.popup = false;
@@ -175,6 +182,14 @@ QtObject {
                     }));
         }
 
+        function onHasInlineReplyChanged(): void {
+            notif.hasInlineReply = notif.notification.hasInlineReply;
+        }
+
+        function onInlineReplyPlaceholderChanged(): void {
+            notif.inlineReplyPlaceholder = notif.notification.inlineReplyPlaceholder;
+        }
+
         function onHintsChanged(): void {
             notif.hints = notif.notification.hints;
         }
@@ -205,6 +220,10 @@ QtObject {
     function maybeTriggerDummyImageLoader(): void {
         if (image && !image.startsWith("image://icon/") && !image.startsWith(Paths.notifimagecache))
             dummyImageLoader.active = true;
+    }
+
+    function reply(text: string): void {
+        notification?.sendInlineReply(text);
     }
 
     function lock(item: Item): void {
@@ -242,6 +261,8 @@ QtObject {
         urgency = notification.urgency;
         resident = notification.resident;
         hasActionIcons = notification.hasActionIcons;
+        hasInlineReply = notification.hasInlineReply;
+        inlineReplyPlaceholder = notification.inlineReplyPlaceholder;
         // qmllint disable unresolved-type
         actions = notification.actions.map(a => ({
                     // qmllint enable unresolved-type

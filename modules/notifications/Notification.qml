@@ -19,8 +19,8 @@ StyledRect {
     readonly property bool hasImage: modelData.image.length > 0
     readonly property bool hasAppIcon: modelData.appIcon.length > 0
     readonly property int bodyTextFormat: /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
-    readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
-    property bool expanded: Config.notifs.openExpanded
+    readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + reply.height + reply.anchors.topMargin + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
+    property bool expanded: Config.notifs.openExpanded || modelData.isAsk
 
     color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.large
@@ -38,6 +38,32 @@ StyledRect {
         Anim {
             easing: Tokens.anim.emphasizedDecel
         }
+    }
+
+    // Time left until the popup hides, drawn as the ring around the icon
+    readonly property bool showExpiry: GlobalConfig.notifs.expire && !modelData.isAsk && modelData.hints?.value === undefined
+    property real expiryProgress: 1
+
+    NumberAnimation {
+        id: expiryAnim
+
+        target: root
+        property: "expiryProgress"
+        from: 1
+        to: 0
+        duration: root.modelData.timer.interval
+        running: true
+    }
+
+    Connections {
+        function onRunningChanged(): void {
+            if (root.modelData.timer.running)
+                expiryAnim.restart();
+            else
+                expiryAnim.stop();
+        }
+
+        target: root.modelData.timer
     }
 
     MouseArea {
@@ -81,12 +107,19 @@ StyledRect {
             }
         }
         onClicked: event => {
-            if (!GlobalConfig.notifs.actionOnClick || event.button !== Qt.LeftButton)
+            if (event.button !== Qt.LeftButton)
                 return;
 
+            if (!GlobalConfig.notifs.actionOnClick) {
+                Notifs.focusSource(root.modelData);
+                return;
+            }
+
             const actions = root.modelData.actions;
-            if (actions.length === 1)
+            if (actions.length === 1 && !root.modelData.isAsk)
                 actions[0].invoke();
+            else
+                Notifs.focusSource(root.modelData);
         }
 
         Item {
@@ -211,9 +244,11 @@ StyledRect {
                         centerY: progressIndicator.height / 2
 
                         startAngle: -90
-                        sweepAngle: ((root.modelData.hints.value ?? 0) / 100) * 360
+                        sweepAngle: root.showExpiry ? root.expiryProgress * 360 : ((root.modelData.hints.value ?? 0) / 100) * 360
 
                         Behavior on sweepAngle {
+                            enabled: !root.showExpiry
+
                             Anim {
                                 easing: Tokens.anim.emphasizedDecel
                             }
@@ -392,7 +427,10 @@ StyledRect {
 
                 animate: true
                 textFormat: root.bodyTextFormat
-                text: bodyPreviewMetrics.elidedText
+                text: root.modelData.body
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                maximumLineCount: 3
+                elide: Text.ElideRight
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.body.small
 
@@ -403,15 +441,6 @@ StyledRect {
                         type: Anim.DefaultEffects
                     }
                 }
-            }
-
-            TextMetrics {
-                id: bodyPreviewMetrics
-
-                text: root.modelData.body
-                font: bodyPreview.font
-                elide: Text.ElideRight
-                elideWidth: bodyPreview.width
             }
 
             StyledText {
@@ -447,12 +476,30 @@ StyledRect {
                 }
             }
 
+            Loader {
+                id: reply
+
+                anchors.left: body.left
+                anchors.right: body.right
+                anchors.top: body.bottom
+                anchors.topMargin: active ? Tokens.spacing.small : 0
+
+                active: root.modelData.hasInlineReply
+                height: active ? implicitHeight : 0
+                opacity: root.expanded ? 1 : 0
+                enabled: root.expanded
+
+                sourceComponent: NotifReplyField {
+                    notif: root.modelData
+                }
+            }
+
             ButtonRow {
                 id: actions
 
                 anchors.left: body.left
                 anchors.right: body.right
-                anchors.top: body.bottom
+                anchors.top: reply.bottom
                 anchors.topMargin: Tokens.spacing.small
 
                 spacing: Tokens.spacing.extraSmall
@@ -473,6 +520,17 @@ StyledRect {
                     icon: "close"
                     padding: Tokens.padding.extraSmall
                     onClicked: root.modelData.close()
+                }
+
+                IconButton {
+                    visible: !!Notifs.sourceToplevel(root.modelData)
+                    isRound: true
+                    shapeMorph: true
+                    inactiveColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+                    inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
+                    icon: "open_in_new"
+                    padding: Tokens.padding.extraSmall
+                    onClicked: Notifs.focusSource(root.modelData)
                 }
 
                 Repeater {

@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+"""Ask the user a question through a desktop notification and print the answer.
+
+    caelestia-ask "Deploy now?" -o Yes -o No      -> prints the chosen option
+    caelestia-ask "Which branch?"                 -> prints the typed text
+    caelestia-ask "Tests are green" --notify      -> only informs, does not wait
+
+Exit codes: 0 answered (answer on stdout), 1 dismissed, 2 timeout, 3 not possible.
+"""
+import argparse
+import json
+import os
+import subprocess
+import sys
+
+from gi.repository import Gio, GLib
+
+NAME = "org.freedesktop.Notifications"
+PATH = "/org/freedesktop/Notifications"
+
+
+def own_window() -> str:
+    """Hyprland address of the window this process runs in (its terminal)."""
+    try:
+        out = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, timeout=2).stdout
+        clients = {c["pid"]: c["address"] for c in json.loads(out)}
+    except Exception:
+        return ""
+    # shortcut: one address per PID and no tmux/ssh support, so single-process
+    # terminals with several windows may pick the wrong one; upgrade when that bites
+    pid = os.getpid()
+    while pid > 1:
+        if pid in clients:
+            return clients[pid]
+        try:
+            with open(f"/proc/{pid}/stat") as f:
+                pid = int(f.read().rsplit(")", 1)[1].split()[1])
+        except (OSError, ValueError, IndexError):
+            break
+    return ""
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("question")
+    p.add_argument("-t", "--title", default="Frage")
+    p.add_argument("-o", "--option", action="append", default=[], help="answer button, repeatable")
+    p.add_argument("--text", action="store_true", help="also allow a typed answer (default when no options)")
+    p.add_argument("--notify", action="store_true", help="only show the notification, do not wait")
+    p.add_argument("--timeout", type=int, default=0, help="give up after N seconds (0 = wait forever)")
+    p.add_argument("--app-name", default="Agent")
+    a = p.parse_args()
+
+    bus = Gio.bus_get_sync(Gio.BusType.SESSION)
+
+    def call(method, params, reply=None):
+        return bus.call_sync(NAME, PATH, NAME, method, params, reply, Gio.DBusCallFlags.NONE, -1, None)
+
+    want_text = not a.notify and (a.text or not a.option)
+    if want_text and "inline-reply" not in call("GetCapabilities", None).unpack()[0]:
+        print("caelestia-ask: notification server has no inline reply, pass options with -o", file=sys.stderr)
+        return 3
+
+    actions = []
+    hints = {}
+    if not a.notify:
+        for i, text in enumerate(a.option):
+            actions += [f"opt{i}", text]
+        hints["x-caelestia-ask"] = GLib.Variant("b", True)
+        if want_text:
+            actions += ["inline-reply", "Antworten"]
+            hints["x-kde-reply-placeholder-text"] = GLib.Variant("s", "Antwort")
+    window = own_window()
+    if window:
+        hints["x-caelestia-window"] = GLib.Variant("s", window)
+
+    loop = GLib.MainLoop()
+    state = {"id": 0, "code": 1}
+
+    def on_signal(_bus, _sender, _path, _iface, signal, params):
+        args = params.unpack()
+        if args[0] != state["id"]:
+            return
+        if signal == "ActionInvoked" and args[1].startswith("opt"):
+            print(a.option[int(args[1][3:])])
+            state["code"] = 0
+        elif signal == "NotificationReplied":
+            print(args[1])
+            state["code"] = 0
+        elif signal != "NotificationClosed":
+            return
+        loop.quit()
+
+    if not a.notify:
+        bus.signal_subscribe(NAME, NAME, None, PATH, None, Gio.DBusSignalFlags.NONE, on_signal)
+
+    params = GLib.Variant("(susssasa{sv}i)", (a.app_name, 0, "", a.title, a.question, actions, hints, -1))
+    state["id"] = call("Notify", params).unpack()[0]
+    if a.notify:
+        return 0
+
+    def on_timeout():
+        state["code"] = 2
+        loop.quit()
+        return False
+
+    if a.timeout > 0:
+        GLib.timeout_add_seconds(a.timeout, on_timeout)
+    try:
+        loop.run()
+    except KeyboardInterrupt:
+        pass
+    call("CloseNotification", GLib.Variant("(u)", (state["id"],)))
+    return state["code"]
+
+
+if __name__ == "__main__":
+    sys.exit(main())

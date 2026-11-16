@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
+import qs.components.controls
 import qs.services
 
 StyledRect {
@@ -16,7 +17,7 @@ StyledRect {
     required property ScreenState screenState
 
     readonly property StyledText body: (expandedContent.item as ExpandedBody)?.body ?? null
-    readonly property real nonAnimHeight: expanded ? summary.implicitHeight + expandedContent.implicitHeight + expandedContent.anchors.topMargin + Tokens.padding.medium * 2 : summaryHeightMetrics.height
+    readonly property real nonAnimHeight: expanded ? summary.implicitHeight + expandedContent.implicitHeight + expandedContent.anchors.topMargin + Tokens.padding.medium * 2 : summaryHeightMetrics.height + (compactBody.item ? compactBody.implicitHeight : 0)
 
     implicitHeight: nonAnimHeight
 
@@ -82,15 +83,16 @@ StyledRect {
     WrappedLoader {
         id: compactBody
 
-        shouldBeActive: !root.expanded
-        anchors.top: parent.top
-        anchors.left: dummySummary.right
+        shouldBeActive: !root.expanded && !!root.modelData?.body
+        anchors.top: summary.bottom
+        anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: Tokens.spacing.small
 
         sourceComponent: StyledText {
             text: String(root.modelData?.body ?? "").replace(/\n/g, " ")
             color: root.modelData?.urgency === "critical" ? Colours.palette.m3secondary : Colours.palette.m3outline
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            maximumLineCount: 3
             elide: Text.ElideRight
         }
     }
@@ -143,6 +145,16 @@ StyledRect {
             onLinkActivated: link => {
                 Qt.openUrlExternally(link);
                 root.screenState.sidebar = false;
+            }
+        }
+
+        Loader {
+            Layout.fillWidth: true
+            active: root.modelData?.hasInlineReply ?? false
+            visible: active
+
+            sourceComponent: NotifReplyField {
+                notif: root.modelData
             }
         }
 

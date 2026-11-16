@@ -95,6 +95,10 @@ LazyListView {
                         root.requestToggleExpand(diffY > 0);
                 }
             }
+            onClicked: event => {
+                if (event.button === Qt.LeftButton)
+                    Notifs.focusSource(modelData);
+            }
             onReleased: event => {
                 if (Math.abs(x) < width * Config.notifs.clearThreshold)
                     x = 0;
@@ -125,7 +129,7 @@ LazyListView {
                 anchors.fill: parent
                 modelData: notif.modelData
                 props: root.props
-                expanded: root.expanded
+                expanded: root.expanded || (notif.modelData?.isAsk ?? false)
                 screenState: root.screenState
             }
 
