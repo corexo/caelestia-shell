@@ -85,7 +85,8 @@ Singleton {
         if (!p)
             return;
         const term = GlobalConfig.general.apps.terminal; // e.g. ["ghostty", "-e"]
-        const command = kind === "agent" ? [...term, "claude"] : kind === "browser" ? ["zen-browser", "--new-window"] : [term[0]];
+        // kind: "terminal", "browser" or an agent CLI ("claude", "codex", "agy")
+        const command = ["claude", "codex", "agy"].includes(kind) ? [...term, kind] : kind === "browser" ? ["zen-browser", "--new-window"] : [term[0]];
         open(name);
         Quickshell.execDetached({
             command,

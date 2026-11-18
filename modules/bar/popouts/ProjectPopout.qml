@@ -124,10 +124,6 @@ ColumnLayout {
                     text: "+ Terminal"
                 },
                 {
-                    kind: "agent",
-                    text: "+ Agent"
-                },
-                {
                     kind: "browser",
                     text: "+ Browser"
                 }
@@ -140,6 +136,44 @@ ColumnLayout {
                 text: modelData.text
                 inactiveColour: Colours.palette.m3secondaryContainer
                 inactiveOnColour: Colours.palette.m3onSecondaryContainer
+                onClicked: Projects.launch(root.project.name, modelData.kind)
+            }
+        }
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Tokens.spacing.small
+
+        StyledText {
+            text: "+ Agent"
+            color: Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.body.small
+        }
+
+        Repeater {
+            model: [
+                {
+                    kind: "claude",
+                    text: "Claude"
+                },
+                {
+                    kind: "codex",
+                    text: "Codex"
+                },
+                {
+                    kind: "agy",
+                    text: "Agy"
+                }
+            ]
+
+            delegate: TextButton {
+                required property var modelData
+
+                Layout.fillWidth: true
+                text: modelData.text
+                inactiveColour: Colours.palette.m3primaryContainer
+                inactiveOnColour: Colours.palette.m3onPrimaryContainer
                 onClicked: Projects.launch(root.project.name, modelData.kind)
             }
         }
