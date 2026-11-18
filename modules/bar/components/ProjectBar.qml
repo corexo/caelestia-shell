@@ -29,11 +29,12 @@ Item {
         anchors.centerIn: parent
         spacing: Tokens.spacing.small
 
-        StyledText {
+        // Divider between numbers and projects (a text label is wider than the bar)
+        StyledRect {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Projekte"
-            color: Colours.palette.m3outline
-            font: Tokens.font.label.small
+            implicitWidth: root.implicitWidth * 0.6
+            implicitHeight: 1
+            color: Colours.palette.m3outlineVariant
         }
 
         Repeater {
