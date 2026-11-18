@@ -6,8 +6,9 @@ import Caelestia.Config
 import qs.components
 import qs.services
 
-// Named project workspaces (services/Projects.qml), shown below the numbered ones
-StyledRect {
+// Named project workspaces (services/Projects.qml), shown below the numbered ones as
+// rounded square tiles (not a pill like the numbers) so the two are easy to tell apart
+Item {
     id: root
 
     required property ShellScreen screen
@@ -20,16 +21,20 @@ StyledRect {
     }
 
     implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: column.implicitHeight + Tokens.padding.small * 2
-
-    color: Colours.tPalette.m3surfaceContainer
-    radius: Tokens.rounding.full
+    implicitHeight: column.implicitHeight
 
     Column {
         id: column
 
         anchors.centerIn: parent
         spacing: Tokens.spacing.small
+
+        StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Projekte"
+            color: Colours.palette.m3outline
+            font: Tokens.font.label.small
+        }
 
         Repeater {
             model: ScriptModel {
@@ -43,15 +48,15 @@ StyledRect {
                 readonly property bool active: root.activeName === modelData.name
                 readonly property bool occupied: Hypr.workspaces.values.some(w => w.name === tile.modelData.name && w.toplevels.values.length > 0)
 
-                implicitWidth: root.implicitWidth - Tokens.padding.small * 2
+                implicitWidth: root.implicitWidth
                 implicitHeight: implicitWidth
-                radius: active ? Tokens.rounding.medium : Tokens.rounding.full
-                color: active ? modelData.colour : Colours.tPalette.m3surfaceContainerHighest
+                radius: Tokens.rounding.large
+                color: active ? modelData.colour : Colours.tPalette.m3surfaceContainerHigh
 
                 StyledText {
                     anchors.centerIn: parent
                     text: tile.modelData.short
-                    color: tile.active ? Colours.palette.m3surface : tile.occupied ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                    color: tile.active ? Colours.palette.m3surface : tile.occupied ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                     font.pointSize: Tokens.font.body.small.pointSize
                     font.weight: 500
                 }
@@ -68,25 +73,22 @@ StyledRect {
 
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    implicitWidth: 10
-                    implicitHeight: 10
+                    anchors.margins: -3
+                    implicitWidth: 12
+                    implicitHeight: 12
                     radius: Tokens.rounding.full
                     visible: status !== ""
                     color: status === "wait" ? "#f5c06b" : "#8fd6a8"
                     border.width: 2
-                    border.color: Colours.palette.m3surfaceContainer
-                }
-
-                Behavior on radius {
-                    Anim {}
+                    border.color: Colours.palette.m3surface
                 }
             }
         }
 
         StyledRect {
-            implicitWidth: root.implicitWidth - Tokens.padding.small * 2
+            implicitWidth: root.implicitWidth
             implicitHeight: implicitWidth
-            radius: Tokens.rounding.full
+            radius: Tokens.rounding.large
             color: "transparent"
             border.width: 1
             border.color: Colours.palette.m3outline
