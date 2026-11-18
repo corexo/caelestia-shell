@@ -85,7 +85,8 @@ def main() -> int:
         # stdout belongs to the MCP protocol: messages go to stderr only
         p = by_folder(os.getcwd())
         if not p:
-            os.execvp(MCP[0], MCP + ["--isolated"])
+            # Google Chrome is not installed, so point it at Chromium
+            os.execvp(MCP[0], MCP + ["--isolated", f"--executable-path={shutil.which('chromium') or 'chromium'}"])
         if not running(p["port"]):
             start(p, new_window=False)
             for _ in range(30):
