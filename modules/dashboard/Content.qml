@@ -41,6 +41,12 @@ Item {
                 iconName: "cloud",
                 text: Tr.tr("Weather"),
                 enabled: Config.dashboard.showWeather
+            },
+            {
+                component: journalComponent,
+                iconName: "auto_stories",
+                text: "Journal",
+                enabled: true
             }
         ];
         return allTabs.filter(tab => tab.enabled);
@@ -180,6 +186,12 @@ Item {
                 id: weatherComponent
 
                 WeatherTab {}
+            }
+
+            Component {
+                id: journalComponent
+
+                JournalTab {}
             }
 
             Behavior on contentX {
