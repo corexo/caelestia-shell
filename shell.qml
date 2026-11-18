@@ -11,6 +11,7 @@ import "modules/areapicker"
 import "modules/lock"
 import "modules/switcher"
 import "modules/projects"
+import "modules/sidekick"
 import QtQuick
 import Quickshell
 import qs.services
@@ -34,6 +35,7 @@ ShellRoot {
     AreaPicker {}
     Switcher {}
     ProjectDialog {}
+    Chat {}
     Lock {
         id: lock
     }

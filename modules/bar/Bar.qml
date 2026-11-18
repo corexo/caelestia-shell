@@ -83,6 +83,10 @@ ColumnLayout {
             } else {
                 popouts.hasCurrent = false;
             }
+        } else if (id === "sidekick") {
+            popouts.currentName = "sidekick";
+            popouts.currentCenter = Qt.binding(() => ch.mapToItem(root, 0, ch.implicitHeight / 2).y);
+            popouts.hasCurrent = true;
         } else if (id !== "windowPreviews" && id !== "workspaces") {
             popouts.hasCurrent = false;
         }
@@ -194,6 +198,12 @@ ColumnLayout {
                     ProjectBar {
                         screen: root.screen
                     }
+                }
+            }
+            DelegateChoice {
+                roleValue: "sidekick"
+                delegate: EntryWrapper {
+                    SidekickButton {}
                 }
             }
             DelegateChoice {

@@ -51,6 +51,11 @@ Item {
         }
 
         Popout {
+            name: "sidekick"
+            sourceComponent: SidekickPopout {}
+        }
+
+        Popout {
             name: "workspacepreview"
             sourceComponent: WorkspacePreview {
                 workspaceId: root.popouts.previewWorkspace
