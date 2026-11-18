@@ -25,6 +25,9 @@ Item {
     readonly property Item current: (content.item as Content)?.current ?? null
     readonly property bool isDetached: detachedMode.length > 0
 
+    property alias previewWorkspace: popoutState.previewWorkspace
+    property alias previewMonitor: popoutState.previewMonitor
+    property alias previewClient: popoutState.previewClient
     property alias currentName: popoutState.currentName
     property alias hasCurrent: popoutState.hasCurrent
     property real currentCenter

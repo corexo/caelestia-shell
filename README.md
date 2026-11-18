@@ -421,20 +421,20 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
             "statusIcons": true
         },
         "workspaces": {
-            "shown": 5,
+            "shown": 10,
             "activeIndicator": true,
             "occupiedBg": false,
-            "showUnoccupied": true,
+            "showUnoccupied": false,
             "perMonitor": true,
-            "showWindows": true,
+            "showWindows": false,
             "showWindowsOnSpecialWorkspaces": true,
             "maxWindowIcons": 5,
             "activeTrail": false,
-            "displayType": "shapes",
+            "displayType": "text",
             "specialDisplayType": "icons",
-            "label": "  ",
-            "occupiedLabel": "󰮯",
-            "activeLabel": "󰮯",
+            "label": "",
+            "occupiedLabel": "",
+            "activeLabel": "",
             "capitalisation": "preserve",
             "workspaceIcons": [],
             "specialWorkspaceIcons": [
@@ -519,7 +519,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
         ],
         "entries": [
             {
-                "id": "logo",
+                "id": "windowPreviews",
                 "enabled": true
             },
             {
@@ -531,15 +531,11 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
                 "enabled": true
             },
             {
-                "id": "activeWindow",
-                "enabled": true
-            },
-            {
-                "id": "spacer",
-                "enabled": true
-            },
-            {
                 "id": "tray",
+                "enabled": true
+            },
+            {
+                "id": "logo",
                 "enabled": true
             },
             {

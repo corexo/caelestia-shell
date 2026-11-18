@@ -47,6 +47,9 @@ StyledClippingRect {
         return wsIds.map(id => workspaces.itemAtIndex(workspaceIndex(id)));
     }
 
+    signal previewHovered(workspaceId: int, center: real)
+    property real hoverY: -1
+
     // Only relevant for when showUnoccupied is true
     readonly property int groupOffset: {
         if (!Config.bar.workspaces.showUnoccupied)
@@ -125,6 +128,7 @@ StyledClippingRect {
                 activeWsId: root.activeWsId
                 ws: Config.bar.workspaces.showUnoccupied ? root.groupOffset + index + 1 : modelData
                 monitor: root.monitor
+                hoverY: root.hoverY
 
                 displayType: Config.bar.workspaces.displayType
                 showWindows: Config.bar.workspaces.showWindows
@@ -173,6 +177,18 @@ StyledClippingRect {
 
         MouseArea {
             anchors.fill: workspaces
+            hoverEnabled: true
+
+            onPositionChanged: event => {
+                root.hoverY = event.y;
+                const item = workspaces.itemAt(event.x, event.y) as Workspace;
+                root.previewHovered(item?.ws ?? 0, item?.mapToItem(root, 0, item.height / 2).y ?? 0);
+            }
+            onExited: {
+                root.hoverY = -1;
+                root.previewHovered(0, 0);
+            }
+
             onClicked: event => {
                 const ws = (workspaces.itemAt(event.x, event.y) as Workspace)?.ws;
                 if (!ws)

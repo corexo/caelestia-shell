@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Widgets
 import Caelestia.Config
@@ -12,7 +13,10 @@ Item {
 
     required property PopoutState popouts
 
-    implicitWidth: Hypr.activeToplevel ? child.implicitWidth : -Tokens.padding.extraLargeIncreased
+    property HyprlandToplevel client: Hypr.activeToplevel
+    property bool showExpand: true
+
+    implicitWidth: client ? child.implicitWidth : -Tokens.padding.extraLargeIncreased
     implicitHeight: child.implicitHeight
 
     Column {
@@ -34,7 +38,7 @@ Item {
                 asynchronous: true
                 Layout.alignment: Qt.AlignVCenter
                 implicitSize: details.implicitHeight
-                source: Icons.getAppIcon(Hypr.activeToplevel?.lastIpcObject.class ?? "", "image-missing")
+                source: Icons.getAppIcon(root.client?.lastIpcObject.class ?? "", "image-missing")
             }
 
             ColumnLayout {
@@ -45,20 +49,21 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Hypr.activeToplevel?.title ?? ""
+                    text: root.client?.title ?? ""
                     font: Tokens.font.body.medium
                     elide: Text.ElideRight
                 }
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Hypr.activeToplevel?.lastIpcObject.class ?? ""
+                    text: root.client?.lastIpcObject.class ?? ""
                     color: Colours.palette.m3onSurfaceVariant
                     elide: Text.ElideRight
                 }
             }
 
             Item {
+                visible: root.showExpand
                 implicitWidth: expandIcon.implicitHeight + Tokens.padding.small
                 implicitHeight: expandIcon.implicitHeight + Tokens.padding.small
 
@@ -80,6 +85,33 @@ Item {
                     fontStyle: Tokens.font.icon.large
                 }
             }
+
+            Item {
+                visible: root.client !== null
+                implicitWidth: closeIcon.implicitHeight + Tokens.padding.small
+                implicitHeight: closeIcon.implicitHeight + Tokens.padding.small
+
+                Layout.alignment: Qt.AlignVCenter
+
+                StateLayer {
+                    radius: Tokens.rounding.large
+                    onClicked: {
+                        if (root.client) {
+                            const address = `address:0x${root.client.address}`;
+                            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.close({ window = "${address}" })` : `closewindow ${address}`);
+                            root.popouts.hasCurrent = false;
+                        }
+                    }
+                }
+
+                MaterialIcon {
+                    id: closeIcon
+
+                    anchors.centerIn: parent
+                    text: "close"
+                    fontStyle: Tokens.font.icon.large
+                }
+            }
         }
 
         ClippingWrapperRectangle {
@@ -89,7 +121,7 @@ Item {
             ScreencopyView {
                 id: preview
 
-                captureSource: Hypr.activeToplevel?.wayland ?? null // qmllint disable unresolved-type
+                captureSource: root.client?.wayland ?? null // qmllint disable unresolved-type
                 live: visible
 
                 constraintSize.width: Tokens.sizes.bar.windowPreviewSize

@@ -15,6 +15,8 @@ StyledRect {
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
+    signal audioRequested()
+
     readonly property int spacing: Tokens.spacing.medium / 2
 
     // Index of the first/last entry that isn't collapsed, for edge margin gating
@@ -164,6 +166,12 @@ StyledRect {
         implicitHeight: item?.implicitHeight ?? 0
 
         children: item
+
+        TapHandler {
+            enabled: parent.name === "audio"
+            acceptedButtons: Qt.LeftButton
+            onTapped: root.audioRequested()
+        }
 
         Behavior on topGap {
             Anim {

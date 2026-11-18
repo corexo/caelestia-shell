@@ -36,7 +36,7 @@ Item {
         (content.item as Bar)?.handleWheel(y, angleDelta);
     }
 
-    clip: true
+    clip: width < contentWidth
     visible: width > Config.border.thickness
     implicitWidth: fullscreen ? 0 : Config.border.thickness
 

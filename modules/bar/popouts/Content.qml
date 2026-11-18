@@ -37,8 +37,25 @@ Item {
         }
 
         Popout {
+            name: "windowpreview"
+            sourceComponent: ActiveWindow {
+                popouts: root.popouts
+                client: root.popouts.previewClient
+                showExpand: false
+            }
+        }
+
+        Popout {
             name: "project"
             sourceComponent: ProjectPopout {}
+        }
+
+        Popout {
+            name: "workspacepreview"
+            sourceComponent: WorkspacePreview {
+                workspaceId: root.popouts.previewWorkspace
+                monitor: root.popouts.previewMonitor
+            }
         }
 
         Popout {

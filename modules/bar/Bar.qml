@@ -83,6 +83,8 @@ ColumnLayout {
             } else {
                 popouts.hasCurrent = false;
             }
+        } else if (id !== "windowPreviews" && id !== "workspaces") {
+            popouts.hasCurrent = false;
         }
     }
 
@@ -139,12 +141,50 @@ ColumnLayout {
                 }
             }
             DelegateChoice {
+                roleValue: "windowPreviews"
+                delegate: EntryWrapper {
+                    visible: (item as WindowPreviews).count > 0
+
+                    WindowPreviews {
+                        id: previews
+
+                        screen: root.screen
+
+                        onPreviewEntered: (client, center) => {
+                            root.popouts.previewClient = client;
+                            root.popouts.currentName = "windowpreview";
+                            root.popouts.currentCenter = previews.mapToItem(root, 0, center).y;
+                            root.popouts.hasCurrent = true;
+                        }
+
+                        onPreviewExited: client => {
+                            // Keep popout open if cursor moves into the popout panel; Interactions.qml handles closing when leaving both bar and popout
+                        }
+                    }
+                }
+            }
+            DelegateChoice {
                 roleValue: "workspaces"
                 delegate: EntryWrapper {
                     Workspaces {
+                        id: workspaceList
+
                         objectName: "taskbarWorkspaces"
                         screen: root.screen
                         fullscreen: root.fullscreen
+
+                        onPreviewHovered: (workspaceId, center) => {
+                            if (workspaceId) {
+                                const workspace = Hypr.workspaces.values.find(ws => ws.id === workspaceId);
+                                root.popouts.previewMonitor = workspace?.monitor ?? workspaceList.monitor;
+                                root.popouts.previewWorkspace = workspaceId;
+                                root.popouts.currentName = "workspacepreview";
+                                root.popouts.currentCenter = workspaceList.mapToItem(root, 0, center).y;
+                                root.popouts.hasCurrent = true;
+                            } else if (root.popouts.currentName === "workspacepreview") {
+                                root.popouts.hasCurrent = false;
+                            }
+                        }
                     }
                 }
             }
@@ -187,6 +227,7 @@ ColumnLayout {
                 delegate: EntryWrapper {
                     StatusIcons {
                         objectName: "taskbarStatusIcons"
+                        onAudioRequested: root.popouts.detach("audio")
                     }
                 }
             }

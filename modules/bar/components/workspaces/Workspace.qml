@@ -19,6 +19,12 @@ Item {
     required property int activeWsId
     required property int ws
     required property HyprlandMonitor monitor
+    property real hoverY: -1
+
+    readonly property real itemCenterY: y + height / 2
+    readonly property real hoverDist: hoverY >= 0 ? Math.abs(hoverY - itemCenterY) : 9999
+    readonly property real hoverProximity: Math.max(0, 1 - hoverDist / ((Tokens.sizes.bar.innerWidth - Tokens.padding.small) * 2.0))
+    readonly property real dockScale: 1 + 0.38 * (hoverProximity * hoverProximity * (3 - 2 * hoverProximity))
 
     required property int displayType
     required property bool showWindows
@@ -183,6 +189,14 @@ Item {
 
             Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
             Layout.preferredHeight: Tokens.sizes.bar.innerWidth - Tokens.padding.small
+            scale: root.dockScale
+
+            Behavior on scale {
+                Anim {
+                    type: Anim.FastSpatial
+                }
+            }
+
             sourceComponent: {
                 if (root.displayType === BarWorkspaceDisplay.Icons)
                     return iconLoaderComponent;

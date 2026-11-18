@@ -32,20 +32,20 @@ class BarPopouts : public settings::ObjectNode {
 class BarWorkspaces : public settings::ObjectNode {
     CONFIG_NODE(BarWorkspaces, settings::ObjectNode)
 
-    CONFIG_PROPERTY(int, shown, 5)
+    CONFIG_PROPERTY(int, shown, 10)
     CONFIG_PROPERTY(bool, activeIndicator, true)
     CONFIG_PROPERTY(bool, occupiedBg, false)
-    CONFIG_PROPERTY(bool, showUnoccupied, true)
+    CONFIG_PROPERTY(bool, showUnoccupied, false)
     CONFIG_PROPERTY(bool, perMonitor, true)
-    CONFIG_PROPERTY(bool, showWindows, true)
+    CONFIG_PROPERTY(bool, showWindows, false)
     CONFIG_PROPERTY(bool, showWindowsOnSpecialWorkspaces, true)
     CONFIG_PROPERTY(int, maxWindowIcons, 5)
     CONFIG_PROPERTY(bool, activeTrail, true)
-    CONFIG_ENUM_PROPERTY(BarWorkspaceDisplay, displayType, BarWorkspaceDisplay::Shapes)
+    CONFIG_ENUM_PROPERTY(BarWorkspaceDisplay, displayType, BarWorkspaceDisplay::Text)
     CONFIG_ENUM_PROPERTY(BarWorkspaceDisplay, specialDisplayType, BarWorkspaceDisplay::Icons)
-    CONFIG_PROPERTY(QString, label, u"  "_s)
-    CONFIG_PROPERTY(QString, occupiedLabel, u"󰮯"_s)
-    CONFIG_PROPERTY(QString, activeLabel, u"󰮯"_s)
+    CONFIG_PROPERTY(QString, label, QString{})
+    CONFIG_PROPERTY(QString, occupiedLabel, QString{})
+    CONFIG_PROPERTY(QString, activeLabel, QString{})
     CONFIG_ENUM_PROPERTY(BarWorkspaceCapitalisation, capitalisation, BarWorkspaceCapitalisation::Preserve)
     CONFIG_GLOBAL_LIST(IconRuleList, workspaceIcons, {})
     CONFIG_GLOBAL_LIST(IconRuleList, specialWorkspaceIcons,
@@ -127,12 +127,11 @@ class BarConfig : public settings::ObjectNode {
         }))
     CONFIG_LIST(EntryList, entries,
         DEFAULT_ARG({
-            LIST_ENTRY(logo, true),
             LIST_ENTRY(workspaces, true),
-            LIST_ENTRY(spacer, true),
-            LIST_ENTRY(activeWindow, true),
+            LIST_ENTRY(windowPreviews, true),
             LIST_ENTRY(spacer, true),
             LIST_ENTRY(tray, true),
+            LIST_ENTRY(logo, true),
             LIST_ENTRY(clock, true),
             LIST_ENTRY(statusIcons, true),
             LIST_ENTRY(power, true),
