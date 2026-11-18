@@ -7,7 +7,8 @@ import Caelestia.Config
 import qs.utils
 
 // Projects are named Hyprland workspaces (name:<project>), separate from the numbered ones.
-// Stored in ~/.config/caelestia/projects.json: [{ name, dir, short, color }]
+// Stored in ~/.config/caelestia/projects.json: [{ name, dir, short, colour, port }]
+// port: Chromium debug port of the project's browser (scripts/project-browser), for agents
 Singleton {
     id: root
 
@@ -35,7 +36,8 @@ Singleton {
                 name,
                 dir: dir || `${Paths.home}/projects/${name}`,
                 short: (short || (initials.length > 1 ? initials[0][0] + initials[1][0] : name.slice(0, 2))).toUpperCase().slice(0, 3),
-                colour: colour || colours[list.length % colours.length]
+                colour: colour || colours[list.length % colours.length],
+                port: nextPort()
             }];
         save();
         return "";
@@ -60,12 +62,11 @@ Singleton {
 
     // Name stays fixed: it is the Hyprland workspace name
     function update(name: string, dir: string, short: string, colour: string): void {
-        list = list.map(p => p.name === name ? {
-                name,
+        list = list.map(p => p.name === name ? Object.assign({}, p, {
                 dir: dir || p.dir,
                 short: (short || p.short).toUpperCase().slice(0, 3),
                 colour: colour || p.colour
-            } : p);
+            }) : p);
         save();
     }
 
@@ -86,12 +87,16 @@ Singleton {
             return;
         const term = GlobalConfig.general.apps.terminal; // e.g. ["ghostty", "-e"]
         // kind: "terminal", "browser" or an agent CLI ("claude", "codex", "agy")
-        const command = ["claude", "codex", "agy"].includes(kind) ? [...term, kind] : kind === "browser" ? ["zen-browser", "--new-window"] : [term[0]];
+        const command = ["claude", "codex", "agy"].includes(kind) ? [...term, kind] : kind === "browser" ? [Quickshell.shellPath("scripts/project-browser"), "open", name] : [term[0]];
         open(name);
         Quickshell.execDetached({
             command,
             workingDirectory: p.dir
         });
+    }
+
+    function nextPort(): int {
+        return Math.max(9300, ...list.map(p => p.port ?? 0)) + 1;
     }
 
     function save(): void {
@@ -109,6 +114,13 @@ Singleton {
             try {
                 const data = JSON.parse(text());
                 root.list = Array.isArray(data) ? data.filter(p => p?.name) : [];
+                // Older entries have no browser port yet: give them one
+                if (root.list.some(p => !p.port)) {
+                    root.list = root.list.reduce((acc, p) => [...acc, p.port ? p : Object.assign({}, p, {
+                                port: Math.max(9300, ...root.list.map(q => q.port ?? 0), ...acc.map(q => q.port)) + 1
+                            })], []);
+                    root.save();
+                }
             } catch (e) {
                 console.warn(`projects.json: ${e}`);
             }
