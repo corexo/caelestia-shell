@@ -105,6 +105,10 @@ Item {
                 }
             }
 
+            CpuTrendCard {
+                Layout.fillWidth: true
+            }
+
             FanCard {
                 Layout.fillWidth: true
             }
