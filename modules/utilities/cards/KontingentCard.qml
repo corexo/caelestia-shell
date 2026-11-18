@@ -120,6 +120,13 @@ StyledRect {
                     elide: Text.ElideRight
                 }
             }
+
+            IconButton {
+                icon: "refresh"
+                type: IconButton.Text
+                disabled: proc.running
+                onClicked: proc.running = true
+            }
         }
 
         Repeater {
@@ -143,12 +150,26 @@ StyledRect {
                 Layout.fillWidth: true
                 spacing: Tokens.spacing.small
 
-                StyledText {
+                RowLayout {
                     Layout.fillWidth: true
-                    text: abschnitt.modelData.name + (abschnitt.info && abschnitt.info.plan ? "  ·  " + abschnitt.info.plan : "")
-                    font: Tokens.font.body.small
-                    color: Colours.palette.m3onSurface
-                    elide: Text.ElideRight
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: abschnitt.modelData.name + (abschnitt.info && abschnitt.info.plan ? "  ·  " + abschnitt.info.plan : "")
+                        font: Tokens.font.body.small
+                        color: Colours.palette.m3onSurface
+                        elide: Text.ElideRight
+                    }
+
+                    // Data only changes while the CLI runs, so show how old it is
+                    StyledText {
+                        readonly property int alterMin: abschnitt.info?.stand && root.daten?.jetzt ? Math.round((root.daten.jetzt - abschnitt.info.stand) / 60) : -1
+
+                        visible: alterMin >= 0
+                        text: "Stand " + Qt.formatTime(new Date(abschnitt.info?.stand * 1000), "hh:mm")
+                        color: alterMin > 30 ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                        font: Tokens.font.body.small
+                    }
                 }
 
                 StyledText {
