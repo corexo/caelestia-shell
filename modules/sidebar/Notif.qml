@@ -150,7 +150,7 @@ StyledRect {
 
         Loader {
             Layout.fillWidth: true
-            active: root.modelData?.hasInlineReply ?? false
+            active: (root.modelData?.hasInlineReply || root.modelData?.canTypeReply) ?? false
             visible: active
 
             sourceComponent: NotifReplyField {

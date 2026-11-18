@@ -56,6 +56,12 @@ QtObject {
     property string inlineReplyPlaceholder
     // Questions from agents (scripts/caelestia-ask) stay on screen until answered
     readonly property bool isAsk: hasInlineReply || !!hints?.["x-caelestia-ask"]
+    // Agent messages (scripts/agent-notify, Claude/Codex apps) stay on screen for a minute
+    readonly property bool isAgent: !!hints?.["x-caelestia-agent"] || ["Claude", "Claude Code", "Codex", "ChatGPT", "Agent"].includes(appName)
+    // Answer is pasted into the agent's terminal (scripts/agent-reply); needs the exact window
+    readonly property bool canTypeReply: !hasInlineReply && !!hints?.["x-caelestia-agent"] && !!hints?.["x-caelestia-window"]
+    // Waiting for an answer: stays on screen for half an hour, then only in the sidebar
+    readonly property bool stays: isAsk || canTypeReply
 
     readonly property bool hasFullscreen: {
         const monitor = Hypr.focusedMonitor;
@@ -69,13 +75,10 @@ QtObject {
 
     readonly property Timer timer: Timer {
         running: true
-        interval: notif.expireTimeout > 0 ? notif.expireTimeout : notif.hasFullscreen ? GlobalConfig.notifs.fullscreenExpireTimeout : GlobalConfig.notifs.defaultExpireTimeout
+        interval: notif.stays ? 30 * 60000 : notif.isAgent ? 60000 : notif.expireTimeout > 0 ? notif.expireTimeout : notif.hasFullscreen ? GlobalConfig.notifs.fullscreenExpireTimeout : GlobalConfig.notifs.defaultExpireTimeout
         onTriggered: {
-            if (notif.isAsk)
-                return;
-
             // Always expire if the active workspace has a fullscreen window
-            if (GlobalConfig.notifs.expire || notif.hasFullscreen)
+            if (GlobalConfig.notifs.expire || notif.hasFullscreen || notif.stays || notif.isAgent)
                 notif.popup = false;
         }
     }
@@ -223,6 +226,11 @@ QtObject {
     }
 
     function reply(text: string): void {
+        if (canTypeReply) {
+            Quickshell.execDetached([Quickshell.shellPath("scripts/agent-reply"),String(hints["x-caelestia-window"]), text]);
+            close();
+            return;
+        }
         notification?.sendInlineReply(text);
     }
 

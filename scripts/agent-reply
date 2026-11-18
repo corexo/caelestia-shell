@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Pastes an answer from a notification into an agent's terminal and presses Enter.
+#   agent-reply <hyprland-window-address> <text>
+# Paste instead of typing so umlauts and the German keyboard layout survive.
+# shortcut: overwrites the clipboard, restore it if that gets annoying
+set -euo pipefail
+
+addr=${1:?window address} text=${2:?text}
+win="address:0x${addr#0x}"
+
+hyprctl clients -j | grep -q "\"${win#address:}\"" || {
+    notify-send -a "Agent" -u normal "Antwort nicht gesendet" "Das Terminal des Agenten ist nicht mehr offen."
+    exit 1
+}
+
+printf '%s' "$text" | wl-copy
+hyprctl dispatch "hl.dsp.focus({ window = \"$win\" })" >/dev/null
+sleep 0.3
+hyprctl dispatch "hl.dsp.send_shortcut({ mods = \"CTRL SHIFT\", key = \"V\", window = \"$win\" })" >/dev/null
+sleep 0.3
+hyprctl dispatch "hl.dsp.send_shortcut({ mods = \"\", key = \"Return\", window = \"$win\" })" >/dev/null

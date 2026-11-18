@@ -49,6 +49,7 @@ def main() -> int:
     p.add_argument("--notify", action="store_true", help="only show the notification, do not wait")
     p.add_argument("--timeout", type=int, default=0, help="give up after N seconds (0 = wait forever)")
     p.add_argument("--app-name", default="Agent")
+    p.add_argument("--agent", action="store_true", help="agent message: stays and its answer is pasted into the terminal")
     a = p.parse_args()
 
     bus = Gio.bus_get_sync(Gio.BusType.SESSION)
@@ -73,6 +74,8 @@ def main() -> int:
     window = own_window()
     if window:
         hints["x-caelestia-window"] = GLib.Variant("s", window)
+    if a.agent:
+        hints["x-caelestia-agent"] = GLib.Variant("b", True)
 
     loop = GLib.MainLoop()
     state = {"id": 0, "code": 1}

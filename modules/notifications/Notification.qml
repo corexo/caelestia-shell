@@ -20,7 +20,7 @@ StyledRect {
     readonly property bool hasAppIcon: modelData.appIcon.length > 0
     readonly property int bodyTextFormat: /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
     readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + reply.height + reply.anchors.topMargin + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
-    property bool expanded: Config.notifs.openExpanded || modelData.isAsk
+    property bool expanded: Config.notifs.openExpanded || modelData.stays
 
     color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.large
@@ -41,7 +41,7 @@ StyledRect {
     }
 
     // Time left until the popup hides, drawn as the ring around the icon
-    readonly property bool showExpiry: GlobalConfig.notifs.expire && !modelData.isAsk && modelData.hints?.value === undefined
+    readonly property bool showExpiry: GlobalConfig.notifs.expire && !modelData.stays &&modelData.hints?.value === undefined
     property real expiryProgress: 1
 
     NumberAnimation {
@@ -484,7 +484,7 @@ StyledRect {
                 anchors.top: body.bottom
                 anchors.topMargin: active ? Tokens.spacing.small : 0
 
-                active: root.modelData.hasInlineReply
+                active: root.modelData.hasInlineReply || root.modelData.canTypeReply
                 height: active ? implicitHeight : 0
                 opacity: root.expanded ? 1 : 0
                 enabled: root.expanded
