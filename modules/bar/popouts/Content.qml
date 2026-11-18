@@ -37,6 +37,11 @@ Item {
         }
 
         Popout {
+            name: "project"
+            sourceComponent: ProjectPopout {}
+        }
+
+        Popout {
             id: networkPopout
 
             name: "network"

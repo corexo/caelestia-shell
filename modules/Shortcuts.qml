@@ -144,6 +144,35 @@ Scope {
     }
 
     IpcHandler {
+        function list(): string {
+            return Projects.list.map(p => `${p.short}\t${p.name}\t${p.dir}`).join("\n");
+        }
+
+        function add(name: string, dir: string): string {
+            return Projects.add(name, dir, "", "") || "ok";
+        }
+
+        function remove(name: string): void {
+            Projects.remove(name);
+        }
+
+        function open(name: string): void {
+            Projects.open(name);
+        }
+
+        function create(): void {
+            Projects.openDialog(null);
+        }
+
+        function edit(name: string): void {
+            if (Projects.find(name))
+                Projects.openDialog(Projects.find(name));
+        }
+
+        target: "projects"
+    }
+
+    IpcHandler {
         function info(title: string, message: string, icon: string): void {
             Toaster.toast(title, message, icon, Toast.Info);
         }

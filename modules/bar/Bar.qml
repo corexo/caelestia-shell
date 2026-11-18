@@ -72,6 +72,17 @@ ColumnLayout {
             popouts.currentName = id.toLowerCase();
             popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
             popouts.hasCurrent = true;
+        } else if (id === "projects") {
+            const bar = ch.item as ProjectBar;
+            const tile = bar.tileAt(mapToItem(bar, 0, y).y);
+            if (tile) {
+                Projects.hovered = tile.modelData.name;
+                popouts.currentName = "project";
+                popouts.currentCenter = Qt.binding(() => tile.mapToItem(root, 0, tile.implicitHeight / 2).y);
+                popouts.hasCurrent = true;
+            } else {
+                popouts.hasCurrent = false;
+            }
         }
     }
 
@@ -134,6 +145,14 @@ ColumnLayout {
                         objectName: "taskbarWorkspaces"
                         screen: root.screen
                         fullscreen: root.fullscreen
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "projects"
+                delegate: EntryWrapper {
+                    ProjectBar {
+                        screen: root.screen
                     }
                 }
             }

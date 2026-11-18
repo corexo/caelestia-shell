@@ -32,8 +32,9 @@ StyledClippingRect {
         const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
         const workspaces = Hypr.workspaces.values.filter(w => w.id > 0 && (allMonitors || w.monitor === root.monitor) && (w.id === activeWsId || w.toplevels.values.some(t => !Hypr.isToplevelIgnored(t, ignoredTags))));
         const currentIdx = workspaces.findIndex(w => w.id === activeWsId);
+        // On a named project workspace (negative id): keep showing the numbered ones
         if (currentIdx < 0)
-            return [];
+            return workspaces.slice(0, shown).map(w => w.id);
 
         const end = CUtils.clamp(currentIdx + 1, Math.min(shown, workspaces.length), workspaces.length);
         const start = Math.max(0, end - shown);
@@ -166,6 +167,7 @@ StyledClippingRect {
                     return workspaces.itemAtIndex(root.activeWsIdx) as Workspace;
                 }
                 mask: workspaces
+                visible: root.activeWsId > 0 // hidden while on a named project workspace
             }
         }
 
